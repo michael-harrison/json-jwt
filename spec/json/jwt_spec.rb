@@ -139,7 +139,7 @@ describe JSON::JWT do
 
     describe 'object copy behaviour' do
       before do
-        @jwt = JSON::JWT.new(obj: {foo: :bar})
+        @jwt = JSON::JWT.new(obj: { foo: :bar })
         @jws = @jwt.sign('secret')
       end
 
@@ -241,7 +241,7 @@ describe JSON::JWT do
           context 'to alg=none' do
             let(:malformed_jwt_string) do
               header, payload, signature = jws.to_s.split('.')
-              malformed_header = {alg: :none}.to_json
+              malformed_header = { alg: :none }.to_json
               [
                 Base64.urlsafe_encode64(malformed_header, padding: false),
                 payload,
@@ -265,7 +265,7 @@ describe JSON::JWT do
           context 'to alg=none' do
             let(:malformed_jwt_string) do
               header, payload, signature = jws.to_s.split('.')
-              malformed_header = {alg: :none}.to_json
+              malformed_header = { alg: :none }.to_json
               [
                 Base64.urlsafe_encode64(malformed_header, padding: false),
                 payload,
@@ -283,7 +283,7 @@ describe JSON::JWT do
           context 'to alg=HS256' do
             let(:malformed_jwt_string) do
               header, payload, signature = jws.to_s.split('.')
-              malformed_header = {alg: :HS256}.to_json
+              malformed_header = { alg: :HS256 }.to_json
               malformed_signature = OpenSSL::HMAC.digest(
                 OpenSSL::Digest.new('SHA256'),
                 public_key.to_s,
@@ -312,7 +312,7 @@ describe JSON::JWT do
           context 'to alg=PS256' do
             let(:malformed_jwt_string) do
               header, payload, signature = jws.to_s.split('.')
-              malformed_header = {alg: :PS256}.to_json
+              malformed_header = { alg: :PS256 }.to_json
               digest = OpenSSL::Digest.new('SHA256')
               malformed_signature = private_key.sign_pss(
                 digest,
@@ -328,18 +328,42 @@ describe JSON::JWT do
             end
 
             context 'when verification algorithm is specified' do
-              it do
-                expect do
-                  JSON::JWT.decode malformed_jwt_string, public_key, :PS512
-                end.to raise_error JSON::JWS::UnexpectedAlgorithm, 'Unexpected alg header'
+              if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.5.0')
+                context 'for Ruby versions 2.5 and later' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key, :PS512
+                    end.to raise_error JSON::JWS::UnexpectedAlgorithm, 'Unexpected alg header'
+                  end
+                end
+              else
+                context 'for Ruby versions earlier than 2.5' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key
+                    end.to raise_error JSON::JWS::UnexpectedAlgorithm
+                  end
+                end
               end
             end
 
             context 'otherwise' do
-              it do
-                expect do
-                  JSON::JWT.decode malformed_jwt_string, public_key
-                end.not_to raise_error
+              if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.5.0')
+                context 'for Ruby versions 2.5 and later' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key
+                    end.not_to raise_error
+                  end
+                end
+              else
+                context 'for Ruby versions earlier than 2.5' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key
+                    end.to raise_error JSON::JWS::UnexpectedAlgorithm
+                  end
+                end
               end
             end
           end
@@ -347,7 +371,7 @@ describe JSON::JWT do
           context 'to alg=RS516' do
             let(:malformed_jwt_string) do
               header, payload, signature = jws.to_s.split('.')
-              malformed_header = {alg: :RS512}.to_json
+              malformed_header = { alg: :RS512 }.to_json
               malformed_signature = private_key.sign(
                 OpenSSL::Digest.new('SHA512'),
                 [Base64.urlsafe_encode64(malformed_header, padding: false), payload].join('.')
@@ -360,18 +384,42 @@ describe JSON::JWT do
             end
 
             context 'when verification algorithm is specified' do
-              it do
-                expect do
-                  JSON::JWT.decode malformed_jwt_string, public_key, :PS512
-                end.to raise_error JSON::JWS::UnexpectedAlgorithm, 'Unexpected alg header'
+              if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.5.0')
+                context 'for Ruby versions 2.5 and later' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key, :PS512
+                    end.to raise_error JSON::JWS::UnexpectedAlgorithm, 'Unexpected alg header'
+                  end
+                end
+              else
+                context 'for Ruby versions earlier than 2.5' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key
+                    end.to raise_error JSON::JWS::UnexpectedAlgorithm
+                  end
+                end
               end
             end
 
             context 'otherwise' do
-              it do
-                expect do
-                  JSON::JWT.decode malformed_jwt_string, public_key
-                end.not_to raise_error
+              if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.5.0')
+                context 'for Ruby versions 2.5 and later' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key
+                    end.not_to raise_error
+                  end
+                end
+              else
+                context 'for Ruby versions earlier than 2.5' do
+                  it do
+                    expect do
+                      JSON::JWT.decode malformed_jwt_string, public_key
+                    end.to raise_error JSON::JWS::UnexpectedAlgorithm
+                  end
+                end
               end
             end
           end
@@ -382,7 +430,7 @@ describe JSON::JWT do
         it 'should skip verification' do
           expect do
             jwt = JSON::JWT.decode jws.to_s, :skip_verification
-            jwt.header.should == {'alg' => 'HS256', 'typ' => 'JWT'}
+            jwt.header.should == { 'alg' => 'HS256', 'typ' => 'JWT' }
           end.not_to raise_error
         end
       end
@@ -413,9 +461,9 @@ describe JSON::JWT do
             {
               payload: Base64.urlsafe_encode64(claims.to_json, padding: false),
               signatures: [{
-                protected: Base64.urlsafe_encode64(signed.header.to_json, padding: false),
-                signature: Base64.urlsafe_encode64(signed.signature, padding: false)
-              }]
+                             protected: Base64.urlsafe_encode64(signed.header.to_json, padding: false),
+                             signature: Base64.urlsafe_encode64(signed.signature, padding: false)
+                           }]
             }
           end
           it_behaves_like :json_serialization_parser
@@ -447,7 +495,7 @@ describe JSON::JWT do
           expect do
             jwe = JSON::JWT.decode input, :skip_decryption
             jwe.should be_instance_of JSON::JWE
-            jwe.header.should == {'alg' => 'RSA1_5', 'enc' => 'A128CBC-HS256'}
+            jwe.header.should == { 'alg' => 'RSA1_5', 'enc' => 'A128CBC-HS256' }
           end.not_to raise_error
         end
       end
@@ -509,22 +557,30 @@ describe JSON::JWT do
   describe '.pretty_generate' do
     subject { JSON::JWT.pretty_generate jws.to_s }
     its(:size) { should == 2 }
-    its(:first) do
-      should == <<~HEADER.chop
+
+    let(:expected_first) do
+      value = <<~HEADER.chop
         {
           "typ": "JWT",
           "alg": "HS256"
         }
       HEADER
+      Gem::Version.new(ActiveSupport::VERSION::STRING) > Gem::Version.new('3.2.22.4') ? value : value.gsub(/\n|\s/, '')
     end
-    its(:last) do
-      should == <<~HEADER.chop
+
+    its(:first) { should == expected_first }
+
+    let(:expected_last) do
+      value = <<~HEADER.chop
         {
           "iss": "joe",
           "exp": 1300819380,
           "http://example.com/is_root": true
         }
       HEADER
+      Gem::Version.new(ActiveSupport::VERSION::STRING) > Gem::Version.new('3.2.22.4') ? value : value.gsub(/\n|\s/, '')
     end
+
+    its(:last) { should == expected_last }
   end
 end
